@@ -23,6 +23,10 @@ public class Tile {
         this.position = position;
     }
     
+    public Tile(){
+        
+    }
+    
     public void setChessPiece(Chesspiece chessPiece){
         tile.setIcon(chessPiece.getImage());
         this.chessPiece = chessPiece;
