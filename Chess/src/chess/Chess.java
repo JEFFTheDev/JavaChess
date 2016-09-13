@@ -29,10 +29,12 @@ public class Chess extends JFrame {
     private static ArrayList<Tile> chessTileList = new ArrayList<Tile>();
     
     private static Chesspiece king = new Chesspiece("King", new ImageIcon(imagePath + "king.png"), new String[]{"8d", "1d"});
+    private static Chesspiece queen = new Chesspiece("Queen", new ImageIcon(imagePath + "queen.png"), new String[]{"8e", "1e"});
     private static Chesspiece horse = new Chesspiece("Horse", new ImageIcon(imagePath + "horse.png"), new String[]{"8b", "1b", "8g", "1g"});
     private static Chesspiece tower = new Chesspiece("Tower", new ImageIcon(imagePath + "tower.png"), new String[]{"1a", "8a", "1h", "8h"});
     private static Chesspiece pawn = new Chesspiece("Pawn", new ImageIcon(imagePath + "pawn.png"), new String[]{"7a", "7b", "7c", "7d","7e","7f","7g","7h","2a","2b","2c","2d","2e","2f","2g","2h"});
-
+    private static Chesspiece bishop = new Chesspiece("Bishop", new ImageIcon(imagePath+"bishop.png"), new String[]{"8c","8f","1c","1f"});
+    
     private static ArrayList<Chesspiece> chessPieces = new ArrayList<Chesspiece>();
 
     public static void main(String[] args) {
@@ -41,6 +43,8 @@ public class Chess extends JFrame {
         chessPieces.add(horse);
         chessPieces.add(tower);
         chessPieces.add(pawn);
+        chessPieces.add(bishop);
+        chessPieces.add(queen);
 
         
 
@@ -90,9 +94,6 @@ public class Chess extends JFrame {
                 }
             }
 
-            //ImageIcon image = new ImageIcon("src/resources/chess pieces/king.png");
-            //image.getImage().getScaledInstance(image.getIconWidth(), image.getIconHeight(), Image.SCALE_SMOOTH);
-            //chessTile.setIcon(image);
             if (columnNumber <= alphArray.length && numberOfRow <= rowArray.length) {
                 String position = rowArray[numberOfRow] + alphArray[columnNumber] + "";
                 chessTileList.add(new Tile(chessTile, position));
@@ -107,7 +108,6 @@ public class Chess extends JFrame {
                 columnNumber++;
             }
 
-            //chessTileList.get(i).setChessPiece(image);
             chessTile.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
                     System.out.print(findPieceFromImage(chessTile.getIcon()).getName()+"\n");
@@ -149,9 +149,7 @@ public class Chess extends JFrame {
                     oldHeight = newHeight;
 
                     //TODO make image scale with screen size
-                    //chessTileList.get(i).getChessPiece().getImage().getScaledInstance(chessTileList.get(i).getChessPiece().getIconWidth() * newWidth, chessTileList.get(i).getChessPiece().getIconHeight() * newHeight, Image.SCALE_SMOOTH);
-                    //chessTileList.get(i).getChessPiece().getImage().
-                    //setSize(chessTileList.get(i).getWidth() * newWidth, chessTileList.get(i).getHeight() * newHeight);
+                    
                 }
             }
 
@@ -191,6 +189,7 @@ public class Chess extends JFrame {
         }
     }
 
+    //TODO refactor getPossiblePosition into move class
     private static ArrayList<String> getPossiblePosition(Chesspiece chessPiece, String position) {
         ArrayList<String> positions = new ArrayList<String>();
 
