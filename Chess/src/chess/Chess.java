@@ -6,12 +6,12 @@
 package chess;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -25,17 +25,36 @@ public class Chess extends JFrame {
     /**
      * @param args the command line arguments
      */
-    private static String imagePath = "src/resources/chess pieces/";
-    private static ArrayList<Tile> chessTileList = new ArrayList<Tile>();
-    
-    private static Chesspiece king = new Chesspiece("King", new ImageIcon(imagePath + "king.png"), new String[]{"8d", "1d"});
-    private static Chesspiece queen = new Chesspiece("Queen", new ImageIcon(imagePath + "queen.png"), new String[]{"8e", "1e"});
-    private static Chesspiece horse = new Chesspiece("Horse", new ImageIcon(imagePath + "horse.png"), new String[]{"8b", "1b", "8g", "1g"});
-    private static Chesspiece tower = new Chesspiece("Tower", new ImageIcon(imagePath + "tower.png"), new String[]{"1a", "8a", "1h", "8h"});
-    private static Chesspiece pawn = new Chesspiece("Pawn", new ImageIcon(imagePath + "pawn.png"), new String[]{"7a", "7b", "7c", "7d","7e","7f","7g","7h","2a","2b","2c","2d","2e","2f","2g","2h"});
-    private static Chesspiece bishop = new Chesspiece("Bishop", new ImageIcon(imagePath+"bishop.png"), new String[]{"8c","8f","1c","1f"});
-    
+    private static final String imagePath = "src/resources/chess pieces/";
+    private static final ArrayList<Tile> chessTileList = new ArrayList<>();
+
+    //Pawn moves
+    final private static Move oneForward = new Move(0, -1, 0);
+    final private static Move oneBackward = new Move(0, 1, 0);
+
+    //Horse moves
+    final private static Move oneRighttwoForward = new Move(1, -2, 0);
+    final private static Move twoRightoneForward = new Move(2, -1, 0);
+
+    //Bishop moves
+    final private static Move diaMove = new Move(0, 0, 8);
+
+    //Tower moves
+    final private static Move fullForward = new Move(0, -8, 0);
+    final private static Move fullBackward = new Move(0, 8, 0);
+    final private static Move fullLeft = new Move(-8, 0, 0);
+    final private static Move fullRight = new Move(8, 0, 0);
+
+    final public static Chesspiece king = new Chesspiece("King", new int[]{14, 84}, new Move[]{oneForward});
+    final private static Chesspiece queen = new Chesspiece("Queen", new int[]{15, 85}, new Move[]{oneForward});
+    final private static Chesspiece horse = new Chesspiece("Horse", new int[]{82, 87, 12, 17}, new Move[]{oneForward, oneRighttwoForward, twoRightoneForward});
+    final private static Chesspiece tower = new Chesspiece("Tower",  new int[]{88, 81, 18, 11}, new Move[]{oneForward});
+    final private static Chesspiece pawn = new Chesspiece("Pawn", new int[]{71, 72, 73, 74, 75, 76, 77, 78, 21, 22, 23, 24, 25, 26, 27, 28}, new Move[]{oneForward});
+    final private static Chesspiece bishop = new Chesspiece("Bishop", new int[]{83, 86, 13, 16}, new Move[]{oneForward});
+
     private static ArrayList<Chesspiece> chessPieces = new ArrayList<Chesspiece>();
+
+    private static JButton tileSel;
 
     public static void main(String[] args) {
 
@@ -45,8 +64,6 @@ public class Chess extends JFrame {
         chessPieces.add(pawn);
         chessPieces.add(bishop);
         chessPieces.add(queen);
-
-        
 
         final JFrame f = new Chess();
 
@@ -65,8 +82,6 @@ public class Chess extends JFrame {
         boolean b = false;
 
         int count = 0;
-
-        String[] alphArray = "a b c d e f g h".split(" ");
 
         int[] rowArray = {1, 2, 3, 4, 5, 6, 7, 8};
 
@@ -94,9 +109,11 @@ public class Chess extends JFrame {
                 }
             }
 
-            if (columnNumber <= alphArray.length && numberOfRow <= rowArray.length) {
-                String position = rowArray[numberOfRow] + alphArray[columnNumber] + "";
-                chessTileList.add(new Tile(chessTile, position));
+            if (columnNumber <= rowArray.length && numberOfRow <= rowArray.length) {
+                String positionString = rowArray[numberOfRow] + "" + rowArray[columnNumber];
+                int position = Integer.parseInt(positionString);
+
+                chessTileList.add(new Tile(chessTile, position, chessTile.getBackground()));
             }
 
             if (columnNumber == 7) {
@@ -109,13 +126,41 @@ public class Chess extends JFrame {
             }
 
             chessTile.addMouseListener(new java.awt.event.MouseAdapter() {
+
+                ArrayList<Integer> posList;
+
+                @Override
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    System.out.print(findPieceFromImage(chessTile.getIcon()).getName()+"\n");
-                    System.out.print(findTileFromButton(chessTile).getPosition()+"\n");
+                    System.out.print("Chesspiece: " + findPieceFromImage(chessTile.getIcon()).getName() + "\nPosition: " + findTileFromButton(chessTile).getPosition() + "\nSide: " + chessTile.getIcon().toString() + "\n");
+
+                    posList = getPosPositions(findTileFromButton(chessTile));
+
+                    for (int i = 0; i < posList.size(); i++) {
+                        findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                    }
                 }
 
+                @Override
                 public void mouseExited(java.awt.event.MouseEvent evt) {
-                   
+
+                    //if (tileSel != chessTile && tileSel != null) {
+                        revertColors();
+                    //}
+
+                }
+            });
+
+            chessTile.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    
+                    ArrayList<Integer> posList = getPosPositions(findTileFromButton(chessTile));
+
+                    for (int i = 0; i < posList.size(); i++) {
+                        //findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                    }
+                    
+                    //tileSel = chessTile;
                 }
             });
 
@@ -123,6 +168,7 @@ public class Chess extends JFrame {
         }
 
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
         f.setSize(500, 400);
         f.setVisible(true);
 
@@ -135,13 +181,13 @@ public class Chess extends JFrame {
 
         f.addComponentListener(new ComponentListener() {
 
+            @Override
             public void componentResized(ComponentEvent e) {
-                //Resize tiles
-
+                //Resize tile images
                 int oldWidth = f.getWidth();
                 int oldHeight = f.getHeight();
 
-                for (int i = 0; i < chessTileList.size(); i++) {
+                for (Tile chessTileList1 : chessTileList) {
                     int newWidth = f.getWidth() / oldWidth;
                     int newHeight = f.getHeight() / oldHeight;
 
@@ -149,7 +195,13 @@ public class Chess extends JFrame {
                     oldHeight = newHeight;
 
                     //TODO make image scale with screen size
+                    //hessTileList.get(i).getChessPiece().getImage().getImage().getScaledInstance(chessTileList.get(i).getChessPiece().getImage().getIconWidth() * newWidth, chessTileList.get(i).getChessPiece().getImage().getIconHeight() * newHeight, Image.SCALE_SMOOTH);
+                    /*BufferedImage bi = new BufferedImage(chessTileList.get(i).getChessPiece().getImage().getImage().getWidth(null), chessTileList.get(i).getChessPiece().getImage().getImage().getHeight(null), BufferedImage.TYPE_INT_ARGB);
+                    Graphics g = bi.createGraphics();
+                    g.drawImage(chessTileList.get(i).getChessPiece().getImage().getImage(), 0, 0, WIDTH, HEIGHT, null);
                     
+                    chessTileList.get(i).getChessPiece().setImage(chessTileList.get(i).getChessPiece().getImage().getImage().getScaledInstance(WIDTH, HEIGHT, WIDTH));
+                    ImageIcon newIcon = new ImageIcon(bi); */
                 }
             }
 
@@ -167,7 +219,6 @@ public class Chess extends JFrame {
             public void componentHidden(ComponentEvent e) {
 
             }
-
         });
 
     }
@@ -179,72 +230,126 @@ public class Chess extends JFrame {
         //Positions = count
 
         for (int i = 0; i < chessPieces.size(); i++) {
-            for (String position : chessPieces.get(i).getPositions()) {
+            for (int position : chessPieces.get(i).getPositions()) {
                 for (int number = 0; number < chessTileList.size(); number++) {
-                    if (chessTileList.get(number).getPosition().equals(position)) {
-                        chessTileList.get(number).setChessPiece(chessPieces.get(i));
+                    if (chessTileList.get(number).getPosition() == position) {
+                        int bOrW= 0;
+                        
+                        if(position <= 48){
+                            bOrW = 1;
+                        }
+                        
+                        System.out.print(bOrW);
+                        chessTileList.get(number).setChessPiece(chessPieces.get(i), bOrW);
                     }
                 }
             }
         }
     }
 
-    //TODO refactor getPossiblePosition into move class
-    private static ArrayList<String> getPossiblePosition(Chesspiece chessPiece, String position) {
-        ArrayList<String> positions = new ArrayList<String>();
+    private static ArrayList<Integer> getPosPositions(Tile t) {
+        ArrayList<Integer> positions = new ArrayList<>();
 
-        String[] yArray = "1 2 3 4 5 6 7 8".split(" ");
-        String[] xArray = "a b c d e f g h".split(" ");
+        int p = t.getPosition();
 
-        switch (chessPiece.getName()) {
-            case "King":
+        if (t.getChessPiece() != null) {
+            for (Move move : t.getChessPiece().getMoves()) {
+                //Split position in 2
 
-                break;
-            case "Horse":
-                String y = position.substring(0, 1);
-                String x = position.substring(1, 2);
+                String posYString = String.valueOf(p).substring(0, 1);
+                String posXString = String.valueOf(p).substring(1, 2);
 
-                if (Arrays.asList(xArray).contains(x) && Arrays.asList(yArray).contains(y)) {
-                    String newX = "";
-                    String newY = "";
+                int posY = Integer.parseInt(posYString);
+                int posX = Integer.parseInt(posXString);
 
-                    for (int i = 0; i < xArray.length; i++) {
-                        if (xArray[i].equals(x)) {
-                            newX = xArray[i + 1];
-                        }
+                //Calculate new x and y
+                int plusMin;
 
-                        if (yArray[i].equals(y)) {
-                            newY = yArray[i + 2];
-                        }
-                    }
-                            
-                    String possiblePosition = newY + newX;
-                    positions.add(possiblePosition);
-                    System.out.println(possiblePosition);
-
+                if (t.getTile().getIcon().toString().contains("_w")) {
+                    plusMin = -1;
+                } else {
+                    plusMin = 1;
                 }
-                break;
+
+                posY += move.getY() * plusMin;
+                posX += move.getX() * plusMin;
+
+                /*if(posY > 8){
+                posY *= -1;
+            }
+            
+            if(posX > 8){
+                posX *= -1;
+            }*/
+                String newPossiblePositionString = posY + "" + posX;
+                int possiblePos = Integer.parseInt(newPossiblePositionString);
+
+                if (findTileFromPosition(possiblePos).getChessPiece() == null) {
+                    positions.add(possiblePos);
+                }
+
+                System.out.print("POSSIBLE POSITION: " + possiblePos + "\n");
+            }
         }
         return positions;
     }
-    
-    private static Chesspiece findPieceFromImage(Icon image){
-        Chesspiece c =  new Chesspiece("Empty", new ImageIcon(), new String[]{""});
-        for(int i = 0; i< chessPieces.size(); i++){
-            if(chessPieces.get(i).getImage() == image){
-               c = chessPieces.get(i);
+
+    private static Chesspiece findPieceFromImage(Icon image) {
+        Chesspiece c = new Chesspiece("Empty", new int[]{}, new Move[]{});
+        for (int i = 0; i < chessPieces.size(); i++) {
+            for(int count = 0; count < 1; count ++){
+                if (chessPieces.get(i).getImage()[count] == image) {
+                 c = chessPieces.get(i);
+                }
             }
         }
         return c;
     }
-    
-    private static Tile findTileFromButton(JButton b){
-        Tile c =  new Tile();
-        for(int i = 0; i< chessTileList.size(); i++){
-            if(chessTileList.get(i).getTile().equals(b)){
-               c = chessTileList.get(i);
+
+    private static Tile findTileFromButton(JButton b) {
+        Tile c = new Tile();
+        for (int i = 0; i < chessTileList.size(); i++) {
+            if (chessTileList.get(i).getTile().equals(b)) {
+                c = chessTileList.get(i);
             }
         }
         return c;
+    }
+
+    private static Tile findTileFromPosition(int pos) {
+        Tile t = new Tile();
+        for (int i = 0; i < chessTileList.size(); i++) {
+            if (chessTileList.get(i).getPosition() == pos) {
+                t = chessTileList.get(i);
+            }
+        }
+        return t;
+    }
+
+    private void setChessPiece(Chesspiece c, Tile tile, int newPos) {
+        tile.getTile().setIcon(null);
+        findTileFromPosition(newPos).setChessPiece(c, 0);
+    }
+
+    //Check if a position is out of bounds
+    private boolean outOfBounds(int pos) {
+        boolean outOfBound;
+
+        String posXString = String.valueOf(pos).substring(0, 1);
+        String posYString = String.valueOf(pos).substring(1, 2);
+
+        int posX = Integer.parseInt(posXString);
+        int posY = Integer.parseInt(posYString);
+
+        outOfBound = posX > 8 || posY > 8;
+
+        return outOfBound;
+    }
+    
+    private static void revertColors(){
+        for(int i = 0; i< chessTileList.size(); i++){
+            Tile t = chessTileList.get(i);
+            t.getTile().setBackground(t.getColor());
+        }
     }
 }

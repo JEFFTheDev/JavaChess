@@ -11,13 +11,25 @@ package chess;
  */
 public class Move {
     
-    int[] x;
-    int[] y;
-    int[] dia;
+    private int x;
+    private int y;
+    private int dia;
     
-    public Move(int[] x, int[] y, int [] dia){
+    public Move(int x, int y, int dia){
         this.x = x;
         this.y = y;
         this.dia = dia;
+    }
+    
+    public int getX(){
+        return x;
+    }
+    
+    public int getY(){
+        return y;
+    }
+    
+    public int getDia(){
+        return dia;
     }
 }
