@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package chess;
 
 import java.awt.Color;
@@ -25,8 +20,9 @@ public class Chess extends JFrame {
     /**
      * @param args the command line arguments
      */
-    private static final String imagePath = "src/resources/chess pieces/";
     private static final ArrayList<Tile> chessTileList = new ArrayList<>();
+
+    private boolean whiteTurn = true;
 
     //Pawn moves
     final private static Move oneForward = new Move(0, -1, 0);
@@ -48,13 +44,15 @@ public class Chess extends JFrame {
     final public static Chesspiece king = new Chesspiece("King", new int[]{14, 84}, new Move[]{oneForward});
     final private static Chesspiece queen = new Chesspiece("Queen", new int[]{15, 85}, new Move[]{oneForward});
     final private static Chesspiece horse = new Chesspiece("Horse", new int[]{82, 87, 12, 17}, new Move[]{oneForward, oneRighttwoForward, twoRightoneForward});
-    final private static Chesspiece tower = new Chesspiece("Tower",  new int[]{88, 81, 18, 11}, new Move[]{oneForward});
+    final private static Chesspiece tower = new Chesspiece("Tower", new int[]{88, 81, 18, 11}, new Move[]{oneForward});
     final private static Chesspiece pawn = new Chesspiece("Pawn", new int[]{71, 72, 73, 74, 75, 76, 77, 78, 21, 22, 23, 24, 25, 26, 27, 28}, new Move[]{oneForward});
     final private static Chesspiece bishop = new Chesspiece("Bishop", new int[]{83, 86, 13, 16}, new Move[]{oneForward});
 
     private static ArrayList<Chesspiece> chessPieces = new ArrayList<Chesspiece>();
 
     private static JButton tileSel;
+
+    private static boolean selectedTile = false;
 
     public static void main(String[] args) {
 
@@ -131,12 +129,14 @@ public class Chess extends JFrame {
 
                 @Override
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    System.out.print("Chesspiece: " + findPieceFromImage(chessTile.getIcon()).getName() + "\nPosition: " + findTileFromButton(chessTile).getPosition() + "\nSide: " + chessTile.getIcon().toString() + "\n");
+//                    System.out.print("Chesspiece: " + findPieceFromImage(chessTile.getIcon()).getName() + "\nPosition: " + findTileFromButton(chessTile).getPosition() + "\nSide: " + chessTile.getIcon().toString() + "\n");
 
-                    posList = getPosPositions(findTileFromButton(chessTile));
+                    if (!selectedTile) {
+                        posList = getPosPositions(findTileFromButton(chessTile));
 
-                    for (int i = 0; i < posList.size(); i++) {
-                        findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                        for (int i = 0; i < posList.size(); i++) {
+                            findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                        }
                     }
                 }
 
@@ -144,7 +144,9 @@ public class Chess extends JFrame {
                 public void mouseExited(java.awt.event.MouseEvent evt) {
 
                     //if (tileSel != chessTile && tileSel != null) {
+                    if (!selectedTile) {
                         revertColors();
+                    }
                     //}
 
                 }
@@ -153,14 +155,33 @@ public class Chess extends JFrame {
             chessTile.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    
-                    ArrayList<Integer> posList = getPosPositions(findTileFromButton(chessTile));
 
-                    for (int i = 0; i < posList.size(); i++) {
-                        //findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                    if (chessTile.getBackground() == Color.DARK_GRAY) {
+                        findTileFromButton(chessTile).setChessPiece(findTileFromButton(tileSel).getChessPiece(), 0);
+                        tileSel.setIcon(null);
+                        selectedTile = false;
+                        revertColors();
+
+                    } else {
+                        revertColors();
+
+                        ArrayList<Integer> posList = getPosPositions(findTileFromButton(chessTile));
+
+                        for (int i = 0; i < posList.size(); i++) {
+                            findTileFromPosition(posList.get(i)).getTile().setBackground(Color.DARK_GRAY);
+                        }
+
+                        if (tileSel != chessTile || tileSel.getIcon() == null) {
+
+                            tileSel = chessTile;
+                            selectedTile = true;
+
+                        } else {
+                            selectedTile = false;
+                        }
+
                     }
-                    
-                    //tileSel = chessTile;
+
                 }
             });
 
@@ -168,7 +189,7 @@ public class Chess extends JFrame {
         }
 
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         f.setSize(500, 400);
         f.setVisible(true);
 
@@ -233,12 +254,12 @@ public class Chess extends JFrame {
             for (int position : chessPieces.get(i).getPositions()) {
                 for (int number = 0; number < chessTileList.size(); number++) {
                     if (chessTileList.get(number).getPosition() == position) {
-                        int bOrW= 0;
-                        
-                        if(position <= 48){
+                        int bOrW = 0;
+
+                        if (position <= 48) {
                             bOrW = 1;
                         }
-                        
+
                         System.out.print(bOrW);
                         chessTileList.get(number).setChessPiece(chessPieces.get(i), bOrW);
                     }
@@ -251,6 +272,14 @@ public class Chess extends JFrame {
         ArrayList<Integer> positions = new ArrayList<>();
 
         int p = t.getPosition();
+
+        String side = "";
+
+        if (t.getTile().getIcon() != null) {
+            side = t.getTile().getIcon().toString().split("_")[1];
+        }
+
+        System.out.print(side);
 
         if (t.getChessPiece() != null) {
             for (Move move : t.getChessPiece().getMoves()) {
@@ -266,9 +295,9 @@ public class Chess extends JFrame {
                 int plusMin;
 
                 if (t.getTile().getIcon().toString().contains("_w")) {
-                    plusMin = -1;
-                } else {
                     plusMin = 1;
+                } else {
+                    plusMin = -1;
                 }
 
                 posY += move.getY() * plusMin;
@@ -284,8 +313,13 @@ public class Chess extends JFrame {
                 String newPossiblePositionString = posY + "" + posX;
                 int possiblePos = Integer.parseInt(newPossiblePositionString);
 
-                if (findTileFromPosition(possiblePos).getChessPiece() == null) {
-                    positions.add(possiblePos);
+                if (posX < 9 && posY < 9) {
+                    JButton tile = findTileFromPosition(possiblePos).getTile();
+
+                    if (tile.getIcon() == null || !tile.getIcon().toString().contains(side)) {
+
+                        positions.add(possiblePos);
+                    }
                 }
 
                 System.out.print("POSSIBLE POSITION: " + possiblePos + "\n");
@@ -297,9 +331,9 @@ public class Chess extends JFrame {
     private static Chesspiece findPieceFromImage(Icon image) {
         Chesspiece c = new Chesspiece("Empty", new int[]{}, new Move[]{});
         for (int i = 0; i < chessPieces.size(); i++) {
-            for(int count = 0; count < 1; count ++){
+            for (int count = 0; count < 1; count++) {
                 if (chessPieces.get(i).getImage()[count] == image) {
-                 c = chessPieces.get(i);
+                    c = chessPieces.get(i);
                 }
             }
         }
@@ -345,11 +379,15 @@ public class Chess extends JFrame {
 
         return outOfBound;
     }
-    
-    private static void revertColors(){
-        for(int i = 0; i< chessTileList.size(); i++){
+
+    private static void revertColors() {
+        for (int i = 0; i < chessTileList.size(); i++) {
             Tile t = chessTileList.get(i);
             t.getTile().setBackground(t.getColor());
         }
+    }
+
+    private void nextTurn() {
+        whiteTurn = !whiteTurn;
     }
 }
